@@ -1,0 +1,119 @@
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.springframework.org/schema/beans" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.1.xsd
+        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd">
+
+	<mvc:annotation-driven />
+	<context:component-scan base-package="com.vathanakmao.testproj.springtest.web.controller" />
+	<context:component-scan base-package="com.vathanakmao.testproj.springtest.service" />
+
+	<!-- Static Resources --> 
+	<mvc:resources mapping="css/**" location="/css/" cache-period="0" />
+	<mvc:resources mapping="images/**" location="/images/"	cache-period="0" />
+
+	<!-- View Resolvers -->
+	<bean id="contentNegotiatingResolver" class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+		<property name="order" value="0" />
+		<property name="mediaTypes">
+			<map>
+				<entry key="json" value="application/json" />
+				<entry key="xml" value="application/xml" />
+				<entry key="rss" value="application/rss+xml" />
+				<entry key="csv" value="text/csv" />
+			</map>
+		</property>
+		<property name="defaultViews">
+			<list>
+				<bean class="org.springframework.web.servlet.view.json.MappingJacksonJsonView"/>
+				<bean class="com.vathanakmao.testproj.springtest.web.view.RssFeedView" />
+				<bean class="com.vathanakmao.testproj.springtest.web.view.EmployeeCsvView" />
+				<bean class="org.springframework.web.servlet.view.xml.MarshallingView">
+					<constructor-arg>
+						<bean class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
+							<property name="classesToBeBound">
+								<list>
+									<value>com.vathanakmao.testproj.springtest.model.Employee</value>
+									<value>com.vathanakmao.testproj.springtest.model.EmployeeList</value>
+								</list>
+							</property>
+						</bean>
+					</constructor-arg>
+				</bean>
+			</list>
+		</property>
+		<property name="ignoreAcceptHeader" value="true" />
+	</bean>
+	
+	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="order" value="#{contentNegotiatingResolver.order+1}"/>
+		<property name="prefix" value="/WEB-INF/jsp/" />
+		<property name="suffix" value=".jsp" />
+	</bean>
+	
+
+	<!-- Interceptors -->
+	<mvc:interceptors>
+		<bean class="com.vathanakmao.testproj.springtest.web.interceptor.LogInterceptor"/>
+	
+		<mvc:interceptor>
+			<mvc:mapping path="/i18ndemo/*" />
+			<ref bean="localeChangeInterceptor" />
+		</mvc:interceptor>
+
+		<mvc:interceptor>
+			<mvc:mapping path="/themedemo" />
+			<ref bean="themeChangeInterceptor" />
+		</mvc:interceptor>
+
+		<mvc:interceptor>
+			<mvc:mapping path="/interceptordemo" />
+			<bean class="com.vathanakmao.testproj.springtest.web.interceptor.RequestTimeTrackerInterceptor" />
+		</mvc:interceptor>
+	</mvc:interceptors>
+
+	<!-- MessageSource -->
+	<bean id="messageSource"
+			class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+		<property name="basenames">
+			<list>
+				<value>classpath:messages/demo</value>
+				<value>classpath:messages/ValidationMessages</value>
+			</list>
+		</property>
+		<property name="defaultEncoding" value="UTF-8" />
+	</bean>
+	
+	<!-- Locale -->
+	<bean id="localeResolver"
+		class="org.springframework.web.servlet.i18n.CookieLocaleResolver">
+		<property name="cookieName" value="clientlanguage" />
+		<property name="defaultLocale" value="en" />
+	</bean>
+	<bean id="localeChangeInterceptor"
+			class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor">
+		<property name="paramName" value="lang" />
+	</bean>
+
+	<!-- Theme -->
+	<bean id="themeSource"
+			class="org.springframework.ui.context.support.ResourceBundleThemeSource">
+		<property name="basenamePrefix" value="themes/" />
+	</bean>
+	<bean id="themeResolver"
+			class="org.springframework.web.servlet.theme.CookieThemeResolver">
+		<property name="defaultThemeName" value="default" />
+	</bean>
+	<!-- <bean id="themeResolver"
+			class="org.springframework.web.servlet.theme.SessionThemeResolver">
+		<property name="defaultThemeName" value="default" />
+	</bean> -->
+	<bean id="themeChangeInterceptor"
+			class="org.springframework.web.servlet.theme.ThemeChangeInterceptor">
+		<property name="paramName" value="theme" />
+	</bean>
+
+</beans>
